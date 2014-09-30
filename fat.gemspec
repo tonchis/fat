@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = "fat"
-  s.version = "0.0.2"
+  s.version = "0.0.3"
   s.summary = "C extension to find values in nested hashes without pain"
   s.description = s.summary
   s.authors = ["Lucas Tolchinsky"]
