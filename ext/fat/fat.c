@@ -46,6 +46,10 @@ static VALUE fat(VALUE hash, VALUE fields) {
     if (value == Qnil) {
       return Qnil;
     }
+
+    if (TYPE(value) != T_HASH) {
+      return value;
+    }
   }
 
   return value;

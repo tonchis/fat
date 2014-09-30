@@ -60,3 +60,20 @@ scope do
   end
 end
 
+scope do
+  setup do
+    {
+      "foo" => {
+        "not_a_hash" => :wat,
+        "bar" => {
+          "baz" => :found
+        }
+      }
+    }
+  end
+
+  test "break if a key doesn't hold a hash" do |hash|
+    assert_equal :wat, Fat.at(hash, "foo.not_a_hash.baz")
+  end
+end
+
