@@ -94,10 +94,7 @@ static VALUE fat(VALUE hash, VALUE fields, int raise_on_nil) {
 
 static void parse_fields(VALUE args, VALUE *fields) {
   if (RARRAY_LEN(args) == 1) {
-    VALUE chain = RARRAY_PTR(args)[0];
-
-    StringValue(chain);
-    *fields = rb_str_split(chain, ".");
+    *fields = rb_str_split(RARRAY_PTR(args)[0], ".");
   } else {
     *fields = args;
   }
