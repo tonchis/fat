@@ -44,21 +44,22 @@ end
 scope do
   setup do
     Hash.include(Fat)
-  end
 
-  test "include the module" do
-    assert Hash.new.respond_to?(:at)
-  end
-
-  test "honor Fat interface" do
-    hash = {
+    {
       "foo" => {
         "bar" => {
           "baz" => :found
         }
       }
     }
+  end
 
+  test "include the module" do |hash|
+    assert hash.respond_to?(:at)
+    assert hash.respond_to?(:fetch_at)
+  end
+
+  test "honor Fat interface" do |hash|
     assert_equal :found, hash.at("foo", "bar", "baz")
     assert_equal :found, hash.at("foo.bar.baz")
 
