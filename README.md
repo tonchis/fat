@@ -57,13 +57,28 @@ hash.at("foo", "bar", "baz")
 # => :value
 ```
 
-And the last one! If all your keys are Strings you can *namespace* them with dots.
+If all your keys are Strings you can *namespace* them with dots.
 
 ```ruby
 Hash.include(Fat)
 
 hash.at("foo.bar.baz")
 # => :value
+```
+
+`Fat` also provides a `Hash#fetch` like interface to `raise KeyError`.
+
+```ruby
+hash = {
+  "foo" => {
+    :bar => {
+      "baz" => :value
+    }
+  }
+}
+
+hash.fetch_at("foo", :bar, "not")
+# => KeyError: No value found at foo.bar.not
 ```
 
 # Install
