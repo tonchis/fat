@@ -35,16 +35,17 @@ Benchmark.ips do |bench|
   bench.compare!
 end
 
-# ### String chain as a single argument.
+### String chain as a single argument.
 # Calculating -------------------------------------
-#                 ruby     47304 i/100ms
-#                    c     55888 i/100ms
+#                 ruby     48558 i/100ms
+#                    c     57683 i/100ms
 # -------------------------------------------------
-#                 ruby   741487.1 (±10.6%) i/s -    3642408 in   5.002662s
-#                    c   977630.9 (±11.3%) i/s -    4806368 in   5.001422s
+#                 ruby   749307.8 (±5.1%) i/s -    3738966 in   5.003814s
+#                    c  1036251.6 (±4.2%) i/s -    5191470 in   5.019832s
+#
 # Comparison:
-#                    c:   977630.9 i/s
-#                 ruby:   741487.1 i/s - 1.32x slower
+#                    c:  1036251.6 i/s
+#                 ruby:   749307.8 i/s - 1.38x slower
 
 puts "### Each key as an argument."
 Benchmark.ips do |bench|
@@ -53,16 +54,17 @@ Benchmark.ips do |bench|
   bench.compare!
 end
 
-# ### Each key as an argument.
+### Each key as an argument.
 # Calculating -------------------------------------
-#                 ruby     57145 i/100ms
-#                    c     73161 i/100ms
+#                 ruby     58664 i/100ms
+#                    c     72333 i/100ms
 # -------------------------------------------------
-#                 ruby  1035908.2 (±9.7%) i/s -    5143050 in   5.036346s
-#                    c  1513478.5 (±11.1%) i/s -    7462422 in   5.017305s
+#                 ruby  1056793.5 (±4.0%) i/s -    5279760 in   5.004811s
+#                    c  1597827.5 (±2.6%) i/s -    8028963 in   5.028489s
+#
 # Comparison:
-#                    c:  1513478.5 i/s
-#                 ruby:  1035908.2 i/s - 1.46x slower
+#                    c:  1597827.5 i/s
+#                 ruby:  1056793.5 i/s - 1.51x slower
 
 puts "### No value found."
 Benchmark.ips do |bench|
@@ -71,16 +73,17 @@ Benchmark.ips do |bench|
   bench.compare!
 end
 
-# ### No value found.
+### No value found.
 # Calculating -------------------------------------
-#                 ruby     46842 i/100ms
-#                    c     62515 i/100ms
+#                 ruby     47999 i/100ms
+#                    c     62238 i/100ms
 # -------------------------------------------------
-#                 ruby   733070.0 (±10.0%) i/s -    3653676 in   5.052594s
-#                    c  1103249.9 (±11.2%) i/s -    5438805 in   5.026985s
+#                 ruby   762731.6 (±4.7%) i/s -    3839920 in   5.048382s
+#                    c  1155802.0 (±4.3%) i/s -    5788134 in   5.019386s
+#
 # Comparison:
-#                    c:  1103249.9 i/s
-#                 ruby:   733070.0 i/s - 1.50x slower
+#                    c:  1155802.0 i/s
+#                 ruby:   762731.6 i/s - 1.52x slower
 
 deep_hash = {}
 1.upto(100) do |n|
@@ -102,16 +105,17 @@ Benchmark.ips do |bench|
   bench.compare!
 end
 
-# ### Deep hash - String chain argument.
+### Deep hash - String chain argument.
 # Calculating -------------------------------------
-#                 ruby     35209 i/100ms
-#                    c     37201 i/100ms
+#                 ruby      2221 i/100ms
+#                    c      1993 i/100ms
 # -------------------------------------------------
-#                 ruby   490384.6 (±10.9%) i/s -    2429421 in   5.040102s
-#                    c   530276.4 (±10.0%) i/s -    2641271 in   5.057748s
+#                 ruby    22485.2 (±3.5%) i/s -     113271 in   5.044126s
+#                    c    20166.9 (±5.9%) i/s -     101643 in   5.062351s
+#
 # Comparison:
-#                    c:   530276.4 i/s
-#                 ruby:   490384.6 i/s - 1.08x slower
+#                 ruby:    22485.2 i/s
+#                    c:    20166.9 i/s - 1.11x slower
 
 puts "### Deep hash - Each key as an argument."
 Benchmark.ips do |bench|
@@ -120,14 +124,15 @@ Benchmark.ips do |bench|
   bench.compare!
 end
 
-# ### Deep hash - Each key as an argument.
+### Deep hash - Each key as an argument.
 # Calculating -------------------------------------
-#                 ruby     44009 i/100ms
-#                    c     46413 i/100ms
+#                 ruby     60055 i/100ms
+#                    c     72494 i/100ms
 # -------------------------------------------------
-#                 ruby   674854.4 (±10.2%) i/s -    3344684 in   5.040045s
-#                    c   734889.3 (±8.5%) i/s -    3666627 in   5.039101s
+#                 ruby  1107237.4 (±6.8%) i/s -    5525060 in   5.015326s
+#                    c  1538256.4 (±9.4%) i/s -    7684364 in   5.044268s
+#
 # Comparison:
-#                    c:   734889.3 i/s
-#                 ruby:   674854.4 i/s - 1.09x slower
+#                    c:  1538256.4 i/s
+#                 ruby:  1107237.4 i/s - 1.39x slower
 
