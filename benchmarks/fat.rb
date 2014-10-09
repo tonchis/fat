@@ -82,26 +82,23 @@ end
 #                    c:  1103249.9 i/s
 #                 ruby:   733070.0 i/s - 1.50x slower
 
-deep_hash = {
-  "foo" => {
-    "bar" => {
-      "baz" => {
-        "and" => {
-          "one" => {
-            "more" => {
-              "key" => :value
-            }
-          }
-        }
-      }
-    }
-  }
-}
+deep_hash = {}
+1.upto(100) do |n|
+  key = (1...n).to_a.join(".")
+  current_hash = deep_hash.at(key)
+  current_hash[n.to_s] = {}
+end
+
+path_to_100 = 1.upto(100).to_a
+
+deep_hash.at(path_to_100.join("."))["foo"] = :bar
+
+path_to_foo = path_to_100 << "foo"
 
 puts "### Deep hash - String chain argument."
 Benchmark.ips do |bench|
-  bench.report("ruby") { deep_hash.ruby_at("foo.bar.baz.and.one.more.key") }
-  bench.report("c")    { deep_hash.at("foo.bar.baz.and.one.more.key") }
+  bench.report("ruby") { deep_hash.ruby_at(path_to_foo.join(".")) }
+  bench.report("c")    { deep_hash.at(path_to_foo.join(".")) }
   bench.compare!
 end
 
@@ -118,8 +115,8 @@ end
 
 puts "### Deep hash - Each key as an argument."
 Benchmark.ips do |bench|
-  bench.report("ruby") { deep_hash.ruby_at("foo", "bar", "baz", "and", "one", "more", "key") }
-  bench.report("c")    { deep_hash.at("foo", "bar", "baz", "and", "one", "more", "key") }
+  bench.report("ruby") { deep_hash.ruby_at(*path_to_foo) }
+  bench.report("c")    { deep_hash.at(*path_to_foo) }
   bench.compare!
 end
 
