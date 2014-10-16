@@ -8,10 +8,9 @@ class Hash
     fields = args.length == 1 ? args[0].split(".") : args
     value = self
 
-    fields.each do |field|
-      value = self[field]
-      return unless value
-      return value unless value.kind_of?(Hash)
+    fields[0..-2].each_with_index do |field, index|
+      value = value[field]
+      raise Fat::FatError, "No hash found at #{fields[0..index].join(".")}" unless value.kind_of?(Hash)
     end
 
     value
@@ -30,22 +29,23 @@ hash = {
 
 puts "### String chain as a single argument."
 Benchmark.ips do |bench|
-  bench.report("ruby") { hash.ruby_at("foo.bar.baz") }
-  bench.report("c")    { hash.at("foo.bar.baz") }
+  bench.report("ruby") { hash.ruby_at("foo.bar.baz.key") }
+  bench.report("c")    { hash.at("foo.bar.baz.key") }
   bench.compare!
 end
 
 ### String chain as a single argument.
 # Calculating -------------------------------------
-#                 ruby     48558 i/100ms
-#                    c     57683 i/100ms
+#                 ruby     37856 i/100ms
+#                    c     47169 i/100ms
 # -------------------------------------------------
-#                 ruby   749307.8 (±5.1%) i/s -    3738966 in   5.003814s
-#                    c  1036251.6 (±4.2%) i/s -    5191470 in   5.019832s
+#                 ruby   538803.8 (±7.3%) i/s -    2687776 in   5.026742s
+#                    c   722313.8 (±7.2%) i/s -    3584844 in   5.006989s
 #
 # Comparison:
-#                    c:  1036251.6 i/s
-#                 ruby:   749307.8 i/s - 1.38x slower
+#                    c:   722313.8 i/s
+#                 ruby:   538803.8 i/s - 1.34x slower
+
 
 puts "### Each key as an argument."
 Benchmark.ips do |bench|
@@ -56,34 +56,35 @@ end
 
 ### Each key as an argument.
 # Calculating -------------------------------------
-#                 ruby     58664 i/100ms
-#                    c     72333 i/100ms
+#                 ruby     59783 i/100ms
+#                    c     74832 i/100ms
 # -------------------------------------------------
-#                 ruby  1056793.5 (±4.0%) i/s -    5279760 in   5.004811s
-#                    c  1597827.5 (±2.6%) i/s -    8028963 in   5.028489s
+#                 ruby  1074906.7 (±3.1%) i/s -    5380470 in   5.010624s
+#                    c  1590070.0 (±4.9%) i/s -    7932192 in   5.004163s
 #
 # Comparison:
-#                    c:  1597827.5 i/s
-#                 ruby:  1056793.5 i/s - 1.51x slower
+#                    c:  1590070.0 i/s
+#                 ruby:  1074906.7 i/s - 1.48x slower
 
 puts "### No value found."
 Benchmark.ips do |bench|
-  bench.report("ruby") { hash.ruby_at("foo.one.key") }
-  bench.report("c")    { hash.at("foo.one.key") }
+  bench.report("ruby") { hash.ruby_at("foo.one.key") rescue Fat::FatError }
+  bench.report("c")    { hash.at("foo.one.key") rescue Fat::FatError }
   bench.compare!
 end
 
 ### No value found.
 # Calculating -------------------------------------
-#                 ruby     47999 i/100ms
-#                    c     62238 i/100ms
+#                 ruby     18155 i/100ms
+#                    c     17312 i/100ms
 # -------------------------------------------------
-#                 ruby   762731.6 (±4.7%) i/s -    3839920 in   5.048382s
-#                    c  1155802.0 (±4.3%) i/s -    5788134 in   5.019386s
+#                 ruby   218791.1 (±5.4%) i/s -    1107455 in   5.083065s
+#                    c   209640.7 (±7.3%) i/s -    1056032 in   5.072484s
 #
 # Comparison:
-#                    c:  1155802.0 i/s
-#                 ruby:   762731.6 i/s - 1.52x slower
+#                 ruby:   218791.1 i/s
+#                    c:   209640.7 i/s - 1.04x slower
+#
 
 deep_hash = {}
 1.upto(100) do |n|
@@ -92,7 +93,7 @@ deep_hash = {}
   current_hash[n.to_s] = {}
 end
 
-path_to_100 = 1.upto(100).to_a
+path_to_100 = 1.upto(100).to_a.map(&:to_s)
 
 deep_hash.at(path_to_100.join("."))["foo"] = :bar
 
@@ -107,15 +108,15 @@ end
 
 ### Deep hash - String chain argument.
 # Calculating -------------------------------------
-#                 ruby      2221 i/100ms
-#                    c      1993 i/100ms
+#                 ruby      2549 i/100ms
+#                    c      3633 i/100ms
 # -------------------------------------------------
-#                 ruby    22485.2 (±3.5%) i/s -     113271 in   5.044126s
-#                    c    20166.9 (±5.9%) i/s -     101643 in   5.062351s
+#                 ruby    27061.4 (±4.1%) i/s -     135097 in   5.002624s
+#                    c    37773.5 (±3.0%) i/s -     188916 in   5.006074s
 #
 # Comparison:
-#                 ruby:    22485.2 i/s
-#                    c:    20166.9 i/s - 1.11x slower
+#                    c:    37773.5 i/s
+#                 ruby:    27061.4 i/s - 1.40x slower
 
 puts "### Deep hash - Each key as an argument."
 Benchmark.ips do |bench|
@@ -126,13 +127,13 @@ end
 
 ### Deep hash - Each key as an argument.
 # Calculating -------------------------------------
-#                 ruby     60055 i/100ms
-#                    c     72494 i/100ms
+#                 ruby      5451 i/100ms
+#                    c     14469 i/100ms
 # -------------------------------------------------
-#                 ruby  1107237.4 (±6.8%) i/s -    5525060 in   5.015326s
-#                    c  1538256.4 (±9.4%) i/s -    7684364 in   5.044268s
+#                 ruby    60434.8 (±3.5%) i/s -     305256 in   5.057543s
+#                    c   159846.7 (±6.9%) i/s -     795795 in   5.006652s
 #
 # Comparison:
-#                    c:  1538256.4 i/s
-#                 ruby:  1107237.4 i/s - 1.39x slower
+#                    c:   159846.7 i/s
+#                 ruby:    60434.8 i/s - 2.64x slower
 
