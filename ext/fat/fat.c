@@ -7,11 +7,9 @@ void Init_fat();
 
 // Interface methods
 static VALUE singleton_method_at(int argc, VALUE *argv, VALUE self);
-static VALUE singleton_method_fetch_at(int argc, VALUE *argv, VALUE self);
 static VALUE method_at(int argc, VALUE *argv, VALUE hash);
-static VALUE method_fetch_at(int argc, VALUE *argv, VALUE hash);
 
-static VALUE fat(VALUE hash, VALUE fields, int raise_on_nil);
+static VALUE fat(VALUE hash, VALUE fields);
 
 // Helpers
 static inline void parse_fields(VALUE args, VALUE *fields);
@@ -24,9 +22,7 @@ void Init_fat(void) {
   rb_eFatError = rb_define_class_under(Fat, "FatError", rb_eStandardError);
 
   rb_define_module_function(Fat, "at", singleton_method_at, -1);
-  rb_define_module_function(Fat, "fetch_at", singleton_method_fetch_at, -1);
   rb_define_method(Fat, "at", method_at, -1);
-  rb_define_method(Fat, "fetch_at", method_fetch_at, -1);
 }
 
 static VALUE singleton_method_at(int argc, VALUE *argv, VALUE self) {
@@ -35,16 +31,7 @@ static VALUE singleton_method_at(int argc, VALUE *argv, VALUE self) {
 
   parse_singleton_args(argc, argv, &hash, &fields);
 
-  return fat(hash, fields, 0);
-}
-
-static VALUE singleton_method_fetch_at(int argc, VALUE *argv, VALUE self) {
-  VALUE hash;
-  VALUE fields;
-
-  parse_singleton_args(argc, argv, &hash, &fields);
-
-  return fat(hash, fields, 1);
+  return fat(hash, fields);
 }
 
 static VALUE method_at(int argc, VALUE *argv, VALUE hash) {
@@ -52,18 +39,10 @@ static VALUE method_at(int argc, VALUE *argv, VALUE hash) {
 
   parse_method_args(argc, argv, &fields);
 
-  return fat(hash, fields, 0);
+  return fat(hash, fields);
 }
 
-static VALUE method_fetch_at(int argc, VALUE *argv, VALUE hash) {
-  VALUE fields;
-
-  parse_method_args(argc, argv, &fields);
-
-  return fat(hash, fields, 1);
-}
-
-static VALUE fat(VALUE hash, VALUE fields, int raise_on_nil) {
+static VALUE fat(VALUE hash, VALUE fields) {
   VALUE value = hash;
 
   for (long i = 0; i < RARRAY_LEN(fields); i++) {
