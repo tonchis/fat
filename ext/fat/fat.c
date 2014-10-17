@@ -49,7 +49,7 @@ static VALUE fat(VALUE hash, VALUE fields) {
     value = rb_hash_aref(value, RARRAY_AREF(fields, i));
 
     if (i < RARRAY_LEN(fields) - 1 && TYPE(value) != T_HASH) {
-      rb_raise(rb_eFatError, "No hash found at %s", RSTRING_PTR(fields_upto_index(fields, i + 1)));
+      rb_raise(rb_eFatError, "No hash found at %s", RSTRING_PTR(fields_upto_index(fields, i)));
     }
   }
 
