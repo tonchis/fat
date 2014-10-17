@@ -16,6 +16,8 @@ static inline void parse_fields(VALUE args, VALUE *fields);
 static inline VALUE fields_upto_index(VALUE fields, long index);
 static inline void parse_singleton_args(int argc, VALUE *argv, VALUE *hash, VALUE *fields);
 static inline void parse_method_args(int argc, VALUE *argv, VALUE *fields);
+static inline long compute_error_message_length(VALUE fields, long index);
+static inline void copy_error_message(VALUE fields, long index, char* error_message_pointer);
 
 void Init_fat(void) {
   Fat = rb_define_module("Fat");
@@ -65,6 +67,27 @@ static inline void parse_fields(VALUE args, VALUE *fields) {
 }
 
 static inline VALUE fields_upto_index(VALUE fields, long index) {
+  long error_length = compute_error_message_length(fields, index);
+
+  char error_message_pointer[error_length];
+  copy_error_message(fields, index, error_message_pointer);
+
+  return rb_str_new2(error_message_pointer);
+}
+
+static inline void parse_singleton_args(int argc, VALUE *argv, VALUE *hash, VALUE *fields) {
+  VALUE args;
+  rb_scan_args(argc, argv, "1*", hash, &args);
+  parse_fields(args, fields);
+}
+
+static inline void parse_method_args(int argc, VALUE *argv, VALUE *fields) {
+  VALUE args;
+  rb_scan_args(argc, argv, "*", &args);
+  parse_fields(args, fields);
+}
+
+static inline long compute_error_message_length(VALUE fields, long index) {
   long error_length = 0;
 
   for (long j = 0; j <= index; j++) {
@@ -81,7 +104,10 @@ static inline VALUE fields_upto_index(VALUE fields, long index) {
     }
   }
 
-  char error_message_pointer[error_length];
+  return error_length;
+}
+
+static inline void copy_error_message(VALUE fields, long index, char* error_message_pointer) {
   char* current_char_pointer = error_message_pointer;
 
   for (long j = 0; j <= index; j++) {
@@ -103,18 +129,4 @@ static inline VALUE fields_upto_index(VALUE fields, long index) {
       current_char_pointer++;
     }
   }
-
-  return rb_str_new2(error_message_pointer);
-}
-
-static inline void parse_singleton_args(int argc, VALUE *argv, VALUE *hash, VALUE *fields) {
-  VALUE args;
-  rb_scan_args(argc, argv, "1*", hash, &args);
-  parse_fields(args, fields);
-}
-
-static inline void parse_method_args(int argc, VALUE *argv, VALUE *fields) {
-  VALUE args;
-  rb_scan_args(argc, argv, "*", &args);
-  parse_fields(args, fields);
 }
