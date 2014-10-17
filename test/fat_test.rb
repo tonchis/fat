@@ -77,3 +77,13 @@ scope do
   end
 end
 
+scope do
+  setup do
+    Hash.include(Fat)
+  end
+
+  test "corner case" do
+    assert_raise(Fat::FatError) { {}.at(:foo, :bar) }
+    assert_raise(Fat::FatError) { Fat.at({}, :foo, :bar) }
+  end
+end
