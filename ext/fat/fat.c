@@ -81,30 +81,30 @@ static inline VALUE fields_upto_index(VALUE fields, long index) {
     }
   }
 
-  VALUE error_message = rb_str_new(0, error_length);
+  char error_message_pointer[error_length];
+  char* current_char_pointer = error_message_pointer;
 
-  char* error_message_pointer = RSTRING_PTR(error_message);
   for (long j = 0; j <= index; j++) {
     VALUE field = RARRAY_AREF(fields, j);
 
     long size;
     if (TYPE(field) == T_SYMBOL) {
       size = rb_str_length(rb_id2str(SYM2ID(field)));
-      memcpy(error_message_pointer, RSTRING_PTR(rb_id2str(SYM2ID(field))), size);
+      memcpy(current_char_pointer, RSTRING_PTR(rb_id2str(SYM2ID(field))), size);
     } else {
       size = RSTRING_LEN(field);
-      memcpy(error_message_pointer, RSTRING_PTR(field), size);
+      memcpy(current_char_pointer, RSTRING_PTR(field), size);
     }
 
-    error_message_pointer += size;
+    current_char_pointer += size;
 
     if (j != index) {
-      memcpy(error_message_pointer, ".", 1);
-      error_message_pointer++;
+      memcpy(current_char_pointer, ".", 1);
+      current_char_pointer++;
     }
   }
 
-  return error_message;
+  return rb_str_new2(error_message_pointer);
 }
 
 static inline void parse_singleton_args(int argc, VALUE *argv, VALUE *hash, VALUE *fields) {
