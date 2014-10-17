@@ -65,8 +65,29 @@ static inline void parse_fields(VALUE args, VALUE *fields) {
 }
 
 static inline VALUE fields_upto_index(VALUE fields, long index) {
-  VALUE slice = rb_funcall(fields, rb_intern("slice"), 2, INT2FIX(0), INT2FIX(index));
-  return rb_ary_join(slice, rb_str_new2("."));
+  long error_length = 0;
+
+  for (long j = 0; j <= index; j++) {
+    error_length += RSTRING_LEN(RARRAY_AREF(fields, j));
+
+    if (j != index) {
+      error_length++;
+    }
+  }
+
+  VALUE error_message = rb_str_new(0, error_length);
+
+  for (long j = 0; j <= index; j++) {
+    VALUE field = RARRAY_AREF(fields, j);
+
+    memcpy(RSTRING_PTR(error_message), RSTRING_PTR(field), RSTRING_LEN(field));
+
+    if (j != index) {
+      memcpy(RSTRING_PTR(error_message), ".", 1);
+    }
+  }
+
+  return error_message;
 }
 
 static inline void parse_singleton_args(int argc, VALUE *argv, VALUE *hash, VALUE *fields) {
