@@ -68,7 +68,13 @@ static inline VALUE fields_upto_index(VALUE fields, long index) {
   long error_length = 0;
 
   for (long j = 0; j <= index; j++) {
-    error_length += RSTRING_LEN(RARRAY_AREF(fields, j));
+    VALUE field = RARRAY_AREF(fields, j);
+
+    if (TYPE(field) == T_SYMBOL) {
+      error_length += rb_str_length(rb_id2str(SYM2ID(field)));
+    } else {
+      error_length += RSTRING_LEN(field);
+    }
 
     if (j != index) {
       error_length++;
@@ -77,13 +83,24 @@ static inline VALUE fields_upto_index(VALUE fields, long index) {
 
   VALUE error_message = rb_str_new(0, error_length);
 
+  char* error_message_pointer = RSTRING_PTR(error_message);
   for (long j = 0; j <= index; j++) {
     VALUE field = RARRAY_AREF(fields, j);
 
-    memcpy(RSTRING_PTR(error_message), RSTRING_PTR(field), RSTRING_LEN(field));
+    long size;
+    if (TYPE(field) == T_SYMBOL) {
+      size = rb_str_length(rb_id2str(SYM2ID(field)));
+      memcpy(error_message_pointer, RSTRING_PTR(rb_id2str(SYM2ID(field))), size);
+    } else {
+      size = RSTRING_LEN(field);
+      memcpy(error_message_pointer, RSTRING_PTR(field), size);
+    }
+
+    error_message_pointer += size;
 
     if (j != index) {
-      memcpy(RSTRING_PTR(error_message), ".", 1);
+      memcpy(error_message_pointer, ".", 1);
+      error_message_pointer++;
     }
   }
 

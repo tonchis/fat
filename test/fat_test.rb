@@ -13,6 +13,7 @@ scope do
   end
 
   test "honor key type" do |hash|
+    require 'pry'; binding.pry
     assert_raise(Fat::FatError) { Fat.at(hash, :foo, :not, :found) }
 
     assert_equal :found, Fat.at(hash, :foo, "bar", :baz)
