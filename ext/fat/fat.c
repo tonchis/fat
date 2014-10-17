@@ -65,8 +65,7 @@ static inline void parse_fields(VALUE args, VALUE *fields) {
 }
 
 static inline VALUE fields_upto_index(VALUE fields, long index) {
-  VALUE range = rb_range_new(INT2FIX(0), INT2FIX(index), 0);
-  VALUE slice = rb_funcall(fields, rb_intern("slice"), 1, range);
+  VALUE slice = rb_funcall(fields, rb_intern("slice"), 2, INT2FIX(0), INT2FIX(index));
   return rb_ary_join(slice, rb_str_new2("."));
 }
 
