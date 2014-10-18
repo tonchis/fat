@@ -21,7 +21,7 @@ hash = {
 
 To get your `:value` you usually do `hash["foo"]["bar"]["baz"]`. But what happens if `"bar"` doesn't exist? Yeap, BOOM!
 
-I find more comfortable to ask if I can walk to `:value` using the keys `"foo"`, `"bar"`, `"baz"`. If I can't, give me some `nil`.
+I find more comfortable to ask if I can walk to `:value` using the keys `"foo"`, `"bar"`, `"baz"`. If I can't, tell me where the path ends.
 
 ```ruby
 require "fat"
@@ -30,8 +30,10 @@ Fat.at(hash, "foo", "bar", "baz")
 # => :value
 
 Fat.at(hash, "foo", "not", "here")
-# => nil
+# => Fat::FatError: No hash found at foo.not
 ```
+
+The `Fat::FatError` let's you know that a `Hash` was expected as a value for the key `"not"`. Way more explicit than guessing from a `undefined method [] for nil`.
 
 It's the same with Symbols
 
@@ -64,21 +66,6 @@ Hash.include(Fat)
 
 hash.at("foo.bar.baz")
 # => :value
-```
-
-`Fat` also provides a `Hash#fetch` like interface to `raise KeyError`.
-
-```ruby
-hash = {
-  "foo" => {
-    :bar => {
-      "baz" => :value
-    }
-  }
-}
-
-hash.fetch_at("foo", :bar, "not")
-# => KeyError: No value found at foo.bar.not
 ```
 
 # Install

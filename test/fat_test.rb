@@ -13,11 +13,9 @@ scope do
   end
 
   test "honor key type" do |hash|
-    assert_equal nil, Fat.at(hash, "foo", :not, :found)
-    assert_raise { Fat.fetch_at(hash, "foo", :not, :found) }
+    assert_raise(Fat::FatError) { Fat.at(hash, :foo, :not, :found) }
 
     assert_equal :found, Fat.at(hash, :foo, "bar", :baz)
-    assert_equal :found, Fat.fetch_at(hash, :foo, "bar", :baz)
   end
 end
 
@@ -33,11 +31,9 @@ scope do
   end
 
   test "namespaced string keys" do |hash|
-    assert_equal nil, Fat.at(hash, "foo.not.found")
-    assert_raise { Fat.fetch_at(hash, "foo.not.found") }
+    assert_raise(Fat::FatError) { Fat.at(hash, "foo", :not, :found) }
 
     assert_equal :found, Fat.at(hash, "foo.bar.baz")
-    assert_equal :found, Fat.fetch_at(hash, "foo.bar.baz")
   end
 end
 
@@ -56,15 +52,11 @@ scope do
 
   test "include the module" do |hash|
     assert hash.respond_to?(:at)
-    assert hash.respond_to?(:fetch_at)
   end
 
   test "honor Fat interface" do |hash|
     assert_equal :found, hash.at("foo", "bar", "baz")
     assert_equal :found, hash.at("foo.bar.baz")
-
-    assert_equal :found, hash.fetch_at("foo", "bar", "baz")
-    assert_equal :found, hash.fetch_at("foo.bar.baz")
   end
 end
 
@@ -80,9 +72,18 @@ scope do
     }
   end
 
-  test "break and return if a value is not a hash" do |hash|
-    assert_equal :wat, Fat.at(hash, "foo.not_a_hash.baz")
-    assert_equal :wat, Fat.fetch_at(hash, "foo.not_a_hash.baz")
+  test "raise error if a value is not a hash" do |hash|
+    assert_raise(Fat::FatError) { Fat.at(hash, "foo.not_a_hash.baz") }
   end
 end
 
+scope do
+  setup do
+    Hash.include(Fat)
+  end
+
+  test "corner case" do
+    assert_raise(Fat::FatError) { {}.at(:foo, :bar) }
+    assert_raise(Fat::FatError) { Fat.at({}, :foo, :bar) }
+  end
+end
