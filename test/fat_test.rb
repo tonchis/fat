@@ -87,3 +87,4 @@ scope do
     assert_raise(Fat::FatError) { Fat.at({}, :foo, :bar) }
   end
 end
+

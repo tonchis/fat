@@ -67,9 +67,8 @@ static inline void parse_fields(VALUE args, VALUE *fields) {
 }
 
 static inline VALUE fields_upto_index(VALUE fields, long index) {
-  long error_length = compute_error_message_length(fields, index);
+  char error_message_pointer[compute_error_message_length(fields, index)];
 
-  char error_message_pointer[error_length];
   copy_error_message(fields, index, error_message_pointer);
 
   return rb_str_new2(error_message_pointer);
