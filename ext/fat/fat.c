@@ -130,3 +130,4 @@ static inline void copy_error_message(VALUE fields, long index, char* error_mess
     }
   }
 }
+

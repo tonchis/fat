@@ -136,3 +136,26 @@ end
 #                    c:   168563.4 i/s
 #                 ruby:    49779.4 i/s - 3.39x slower
 
+path_to_not = 1.upto(99).to_a.map(&:to_s)
+path_to_not << "not"
+path_to_not << "100"
+
+puts "### Deep hash - No value found."
+Benchmark.ips do |bench|
+  bench.report("ruby") { deep_hash.ruby_at(*path_to_not) rescue Fat::FatError }
+  bench.report("c")    { deep_hash.at(*path_to_not) rescue Fat::FatError }
+  bench.compare!
+end
+
+### Deep hash - No value found.
+# Calculating -------------------------------------
+#                 ruby      2787 i/100ms
+#                    c      8277 i/100ms
+# -------------------------------------------------
+#                 ruby    30667.8 (±1.3%) i/s -     156072 in   5.090009s
+#                    c    86884.1 (±5.1%) i/s -     438681 in   5.064367s
+#
+# Comparison:
+#                    c:    86884.1 i/s
+#                 ruby:    30667.8 i/s - 2.83x slower
+
