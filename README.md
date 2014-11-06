@@ -59,12 +59,31 @@ hash.at("foo", "bar", "baz")
 # => :value
 ```
 
-If all your keys are Strings you can *namespace* them with dots.
+You can also *namespace* the keys with dots `.` or colons `:` if they are all Strings or Symbols, respectively.
 
 ```ruby
 Hash.include(Fat)
 
+hash = {
+  "foo" => {
+    "bar" => {
+      "baz" => :value
+    }
+  }
+}
+
 hash.at("foo.bar.baz")
+# => :value
+
+hash = {
+  foo: {
+    bar: {
+      baz: :value
+    }
+  }
+}
+
+hash.at("foo:bar:baz")
 # => :value
 ```
 
