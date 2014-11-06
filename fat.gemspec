@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.files = `git ls-files`.split("\n")
   s.extensions = ["ext/fat/extconf.rb"]
 
-  s.add_development_dependency "cutest"
+  s.add_development_dependency "cutest", ">= 1.2.2"
   s.add_development_dependency "rake-compiler"
 end
 
