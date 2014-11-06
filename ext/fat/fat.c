@@ -18,6 +18,8 @@ static inline void parse_singleton_args(int argc, VALUE *argv, VALUE *hash, VALU
 static inline void parse_method_args(int argc, VALUE *argv, VALUE *fields);
 static inline long compute_error_message_length(VALUE fields, long index);
 static inline void copy_error_message(VALUE fields, long index, char* error_message_pointer);
+static inline VALUE str_to_sym(VALUE str);
+static inline VALUE sym_to_str(VALUE sym);
 
 void Init_fat(void) {
   Fat = rb_define_module("Fat");
@@ -61,6 +63,18 @@ static VALUE fat(VALUE hash, VALUE fields) {
 static inline void parse_fields(VALUE args, VALUE *fields) {
   if (RARRAY_LEN(args) == 1) {
     *fields = rb_str_split(RARRAY_PTR(args)[0], ".");
+
+    if (RARRAY_LEN(*fields) == 1) {
+      VALUE split = rb_str_split(RARRAY_PTR(args)[0], ":");
+
+      if (RARRAY_LEN(split) == 1) {
+        rb_raise(rb_eFatError, "Single argument expected to be a namespace with dots (.) or colons (:)");
+      } else {
+        for (long i = 0; i < RARRAY_LEN(split); i++) {
+          rb_ary_store(*fields, i, str_to_sym(RARRAY_AREF(split, i)));
+        }
+      }
+    }
   } else {
     *fields = args;
   }
@@ -93,15 +107,19 @@ static inline long compute_error_message_length(VALUE fields, long index) {
     VALUE field = RARRAY_AREF(fields, j);
 
     if (TYPE(field) == T_SYMBOL) {
-      error_length += rb_str_length(rb_id2str(SYM2ID(field)));
+      error_length += RSTRING_LEN(sym_to_str(field));
     } else {
       error_length += RSTRING_LEN(field);
     }
 
+    // "." separator for the message.
     if (j != index) {
       error_length++;
     }
   }
+
+  // The last character is '\0'.
+  error_length++;
 
   return error_length;
 }
@@ -114,8 +132,8 @@ static inline void copy_error_message(VALUE fields, long index, char* error_mess
 
     long size;
     if (TYPE(field) == T_SYMBOL) {
-      size = rb_str_length(rb_id2str(SYM2ID(field)));
-      memcpy(current_char_pointer, RSTRING_PTR(rb_id2str(SYM2ID(field))), size);
+      size = RSTRING_LEN(sym_to_str(field));
+      memcpy(current_char_pointer, RSTRING_PTR(sym_to_str(field)), size);
     } else {
       size = RSTRING_LEN(field);
       memcpy(current_char_pointer, RSTRING_PTR(field), size);
@@ -128,5 +146,14 @@ static inline void copy_error_message(VALUE fields, long index, char* error_mess
       current_char_pointer++;
     }
   }
+
+  *current_char_pointer++ = '\0';
 }
 
+static inline VALUE str_to_sym(VALUE str) {
+  return ID2SYM(rb_intern(RSTRING_PTR(str)));
+}
+
+static inline VALUE sym_to_str(VALUE sym) {
+  return rb_id2str(SYM2ID(sym));
+}
