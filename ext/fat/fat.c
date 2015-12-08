@@ -12,13 +12,9 @@ static VALUE method_at(int argc, VALUE *argv, VALUE hash);
 static VALUE fat(VALUE hash, VALUE fields);
 
 // Helpers
-static inline void parse_fields(VALUE args, VALUE *fields);
 static inline VALUE fields_upto_index(VALUE fields, long index);
-static inline void parse_singleton_args(int argc, VALUE *argv, VALUE *hash, VALUE *fields);
-static inline void parse_method_args(int argc, VALUE *argv, VALUE *fields);
 static inline long compute_error_message_length(VALUE fields, long index);
 static inline void copy_error_message(VALUE fields, long index, char* error_message_pointer);
-static inline VALUE str_to_sym(VALUE str);
 static inline VALUE sym_to_str(VALUE sym);
 
 void Init_fat(void) {
@@ -33,7 +29,7 @@ static VALUE singleton_method_at(int argc, VALUE *argv, VALUE self) {
   VALUE hash;
   VALUE fields;
 
-  parse_singleton_args(argc, argv, &hash, &fields);
+  rb_scan_args(argc, argv, "1*", &hash, &fields);
 
   return fat(hash, fields);
 }
@@ -41,7 +37,7 @@ static VALUE singleton_method_at(int argc, VALUE *argv, VALUE self) {
 static VALUE method_at(int argc, VALUE *argv, VALUE hash) {
   VALUE fields;
 
-  parse_method_args(argc, argv, &fields);
+  rb_scan_args(argc, argv, "*", &fields);
 
   return fat(hash, fields);
 }
@@ -60,44 +56,12 @@ static VALUE fat(VALUE hash, VALUE fields) {
   return value;
 }
 
-static inline void parse_fields(VALUE args, VALUE *fields) {
-  if (RARRAY_LEN(args) == 1) {
-    *fields = rb_str_split(RARRAY_PTR(args)[0], ".");
-
-    if (RARRAY_LEN(*fields) == 1) {
-      VALUE split = rb_str_split(RARRAY_PTR(args)[0], ":");
-
-      if (RARRAY_LEN(split) == 1) {
-        rb_raise(rb_eFatError, "Single argument expected to be a namespace with dots (.) or colons (:)");
-      } else {
-        for (long i = 0; i < RARRAY_LEN(split); i++) {
-          rb_ary_store(*fields, i, str_to_sym(RARRAY_AREF(split, i)));
-        }
-      }
-    }
-  } else {
-    *fields = args;
-  }
-}
-
 static inline VALUE fields_upto_index(VALUE fields, long index) {
   char error_message_pointer[compute_error_message_length(fields, index)];
 
   copy_error_message(fields, index, error_message_pointer);
 
   return rb_str_new2(error_message_pointer);
-}
-
-static inline void parse_singleton_args(int argc, VALUE *argv, VALUE *hash, VALUE *fields) {
-  VALUE args;
-  rb_scan_args(argc, argv, "1*", hash, &args);
-  parse_fields(args, fields);
-}
-
-static inline void parse_method_args(int argc, VALUE *argv, VALUE *fields) {
-  VALUE args;
-  rb_scan_args(argc, argv, "*", &args);
-  parse_fields(args, fields);
 }
 
 static inline long compute_error_message_length(VALUE fields, long index) {
@@ -148,10 +112,6 @@ static inline void copy_error_message(VALUE fields, long index, char* error_mess
   }
 
   *current_char_pointer++ = '\0';
-}
-
-static inline VALUE str_to_sym(VALUE str) {
-  return ID2SYM(rb_intern(RSTRING_PTR(str)));
 }
 
 static inline VALUE sym_to_str(VALUE sym) {
