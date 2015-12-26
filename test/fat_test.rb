@@ -4,25 +4,6 @@ require_relative "../lib/fat"
 scope do
   setup do
     {
-      foo: {
-        "bar" => {
-          baz: :found
-        }
-      }
-    }
-  end
-
-  test "honor key type" do |hash|
-    exception = assert_raise(Fat::FatError) { Fat.at(hash, :foo, :bar, :found) }
-    assert_equal "No hash found at foo.bar", exception.message
-
-    assert_equal :found, Fat.at(hash, :foo, "bar", :baz)
-  end
-end
-
-scope do
-  setup do
-    {
       "foo" => {
         "bar" => {
           "baz" => :found
@@ -35,11 +16,38 @@ scope do
     assert_equal :found, Fat.at(hash, "foo", "bar", "baz")
   end
 
+  test "don't find value" do |hash|
+    exception = assert_raise(Fat::FatError) { Fat.at(hash, "foo", "bar", "wat") }
+    assert_equal "foo.bar.wat is nil", exception.message
+
+    exception = assert_raise(Fat::FatError) { Fat.at(hash, "foo", "wat", "baz") }
+    assert_equal "foo.wat is nil", exception.message
+  end
+
   test "include the module" do |hash|
     Hash.include(Fat)
 
     assert hash.respond_to?(:at)
     assert_equal :found, hash.at("foo", "bar", "baz")
+  end
+end
+
+scope do
+  setup do
+    {
+      foo: {
+        "bar" => {
+          baz: :found
+        }
+      }
+    }
+  end
+
+  test "honor key type" do |hash|
+    exception = assert_raise(Fat::FatError) { Fat.at(hash, :foo, :bar, :found) }
+    assert_equal "foo.bar is nil", exception.message
+
+    assert_equal :found, Fat.at(hash, :foo, "bar", :baz)
   end
 end
 
