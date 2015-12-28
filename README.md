@@ -19,9 +19,9 @@ hash = {
 }
 ```
 
-To get your `:value` you usually do `hash["foo"]["bar"]["baz"]`. But what happens if `"bar"` doesn't exist? Yeap, BOOM!
+To get your `:value` you usually do `hash["foo"]["bar"]["baz"]`. But what happens if `"bar"` doesn't exist? Yeap, BOOM! You will get an `undefined method [] for nil` error.
 
-I find more comfortable to ask if I can walk to `:value` using the keys `"foo"`, `"bar"`, `"baz"`. If I can't, tell me where the path ends.
+Using `Fat` you can walk the hash up to the `:value`, but it'll raise an exception if it finds `nil` at any point.
 
 ```ruby
 require "fat"
@@ -30,10 +30,22 @@ Fat.at(hash, "foo", "bar", "baz")
 # => :value
 
 Fat.at(hash, "foo", "not", "here")
-# => Fat::FatError: No hash found at foo.not
+# => Fat::FatError: foo.not is nil
+
+Fat.at(hash, "foo", "bar", "nope")
+# => Fat::FatError: foo.bar.nope is nil
 ```
 
-The `Fat::FatError` let's you know that a `Hash` was expected as a value for the key `"not"`. Way more explicit than guessing from a `undefined method [] for nil`.
+You can specify a default return value with the `default:` keyword if you don't want an exception raised.
+
+```ruby
+require "fat"
+
+Fat.at(hash, "foo", "not", "here", default: "whoops")
+# => "whoops"
+```
+
+If you set `default: nil` this method behaves exactly like [Hash#dig](http://ruby-doc.org/core-2.3.0/Hash.html#method-i-dig), available from Ruby 2.3.0.
 
 It's the same with Symbols
 
@@ -56,34 +68,6 @@ If you prefer to call `hash.at` you only need to include `Fat` into `Hash`.
 Hash.include(Fat)
 
 hash.at("foo", "bar", "baz")
-# => :value
-```
-
-You can also *namespace* the keys with dots `.` or colons `:` if they are all Strings or Symbols, respectively.
-
-```ruby
-Hash.include(Fat)
-
-hash = {
-  "foo" => {
-    "bar" => {
-      "baz" => :value
-    }
-  }
-}
-
-hash.at("foo.bar.baz")
-# => :value
-
-hash = {
-  foo: {
-    bar: {
-      baz: :value
-    }
-  }
-}
-
-hash.at("foo:bar:baz")
 # => :value
 ```
 
