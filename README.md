@@ -1,11 +1,11 @@
 fat
 ===
 
-C extension to find values in nested hashes without pain
+`Fat` is where [dig](http://ruby-doc.org/core-2.3.0/Hash.html#method-i-dig) meets [fetch](http://ruby-doc.org/core-2.3.0/Hash.html#method-i-fetch)
 
 The name is an acronym for "find at". It helps you avoid that nasty `undefined method [] for nil` when looking for values in a hash.
 
-# Use
+# Why
 
 Say you have the following hash
 
@@ -21,7 +21,9 @@ hash = {
 
 To get your `:value` you usually do `hash["foo"]["bar"]["baz"]`. But what happens if `"bar"` doesn't exist? Yeap, BOOM! You will get an `undefined method [] for nil` error.
 
-Using `Fat` you can walk the hash up to the `:value`, but it'll raise an exception if it finds `nil` at any point.
+# Use
+
+Using `Fat` you can walk the hash up to the `:value` (just like `dig`), but it'll raise an exception if it finds `nil` (just like `fetch`) at any point.
 
 ```ruby
 require "fat"
