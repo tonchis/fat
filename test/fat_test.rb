@@ -24,6 +24,10 @@ scope do
     assert_equal "foo.wat is nil", exception.message
   end
 
+  test "return default value" do |hash|
+    assert_equal "default", Fat.at(hash, "foo", "wat", "baz", default: "default")
+  end
+
   test "include the module" do |hash|
     Hash.include(Fat)
 
