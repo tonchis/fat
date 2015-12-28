@@ -9,17 +9,14 @@ void Init_fat();
 static VALUE singleton_method_at(int argc, VALUE *argv, VALUE self);
 static VALUE method_at(int argc, VALUE *argv, VALUE hash);
 
-static VALUE fat(VALUE hash, VALUE fields);
+static VALUE fat(VALUE hash, VALUE fields, VALUE default_value);
 
 // Helpers
-static inline void parse_fields(VALUE args, VALUE *fields);
 static inline VALUE fields_upto_index(VALUE fields, long index);
-static inline void parse_singleton_args(int argc, VALUE *argv, VALUE *hash, VALUE *fields);
-static inline void parse_method_args(int argc, VALUE *argv, VALUE *fields);
 static inline long compute_error_message_length(VALUE fields, long index);
 static inline void copy_error_message(VALUE fields, long index, char* error_message_pointer);
-static inline VALUE str_to_sym(VALUE str);
 static inline VALUE sym_to_str(VALUE sym);
+static inline VALUE extract_default(VALUE keywords);
 
 void Init_fat(void) {
   Fat = rb_define_module("Fat");
@@ -32,52 +29,38 @@ void Init_fat(void) {
 static VALUE singleton_method_at(int argc, VALUE *argv, VALUE self) {
   VALUE hash;
   VALUE fields;
+  VALUE keywords;
 
-  parse_singleton_args(argc, argv, &hash, &fields);
+  rb_scan_args(argc, argv, "1*:", &hash, &fields, &keywords);
 
-  return fat(hash, fields);
+  return fat(hash, fields, extract_default(keywords));
 }
 
 static VALUE method_at(int argc, VALUE *argv, VALUE hash) {
   VALUE fields;
+  VALUE keywords;
 
-  parse_method_args(argc, argv, &fields);
+  rb_scan_args(argc, argv, "*:", &fields, &keywords);
 
-  return fat(hash, fields);
+  return fat(hash, fields, extract_default(keywords));
 }
 
-static VALUE fat(VALUE hash, VALUE fields) {
+static VALUE fat(VALUE hash, VALUE fields, VALUE default_value) {
   VALUE value = hash;
 
   for (long i = 0; i < RARRAY_LEN(fields); i++) {
     value = rb_hash_aref(value, RARRAY_AREF(fields, i));
 
-    if (i < RARRAY_LEN(fields) - 1 && TYPE(value) != T_HASH) {
-      rb_raise(rb_eFatError, "No hash found at %s", RSTRING_PTR(fields_upto_index(fields, i)));
+    if (NIL_P(value)) {
+      if (!NIL_P(default_value)) {
+        return default_value;
+      } else {
+        rb_raise(rb_eFatError, "%s is nil", RSTRING_PTR(fields_upto_index(fields, i)));
+      }
     }
   }
 
   return value;
-}
-
-static inline void parse_fields(VALUE args, VALUE *fields) {
-  if (RARRAY_LEN(args) == 1) {
-    *fields = rb_str_split(RARRAY_PTR(args)[0], ".");
-
-    if (RARRAY_LEN(*fields) == 1) {
-      VALUE split = rb_str_split(RARRAY_PTR(args)[0], ":");
-
-      if (RARRAY_LEN(split) == 1) {
-        rb_raise(rb_eFatError, "Single argument expected to be a namespace with dots (.) or colons (:)");
-      } else {
-        for (long i = 0; i < RARRAY_LEN(split); i++) {
-          rb_ary_store(*fields, i, str_to_sym(RARRAY_AREF(split, i)));
-        }
-      }
-    }
-  } else {
-    *fields = args;
-  }
 }
 
 static inline VALUE fields_upto_index(VALUE fields, long index) {
@@ -86,18 +69,6 @@ static inline VALUE fields_upto_index(VALUE fields, long index) {
   copy_error_message(fields, index, error_message_pointer);
 
   return rb_str_new2(error_message_pointer);
-}
-
-static inline void parse_singleton_args(int argc, VALUE *argv, VALUE *hash, VALUE *fields) {
-  VALUE args;
-  rb_scan_args(argc, argv, "1*", hash, &args);
-  parse_fields(args, fields);
-}
-
-static inline void parse_method_args(int argc, VALUE *argv, VALUE *fields) {
-  VALUE args;
-  rb_scan_args(argc, argv, "*", &args);
-  parse_fields(args, fields);
 }
 
 static inline long compute_error_message_length(VALUE fields, long index) {
@@ -150,10 +121,16 @@ static inline void copy_error_message(VALUE fields, long index, char* error_mess
   *current_char_pointer++ = '\0';
 }
 
-static inline VALUE str_to_sym(VALUE str) {
-  return ID2SYM(rb_intern(RSTRING_PTR(str)));
-}
-
 static inline VALUE sym_to_str(VALUE sym) {
   return rb_id2str(SYM2ID(sym));
+}
+
+static inline VALUE extract_default(VALUE keywords) {
+  VALUE result = Qnil;
+
+  if (!NIL_P(keywords)) {
+    result = rb_hash_aref(keywords, ID2SYM(rb_intern("default")));
+  }
+
+  return result;
 }

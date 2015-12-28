@@ -4,6 +4,42 @@ require_relative "../lib/fat"
 scope do
   setup do
     {
+      "foo" => {
+        "bar" => {
+          "baz" => :found
+        }
+      }
+    }
+  end
+
+  test "find value" do |hash|
+    assert_equal :found, Fat.at(hash, "foo", "bar", "baz")
+  end
+
+  test "don't find value" do |hash|
+    exception = assert_raise(Fat::FatError) { Fat.at(hash, "foo", "bar", "wat") }
+    assert_equal "foo.bar.wat is nil", exception.message
+
+    exception = assert_raise(Fat::FatError) { Fat.at(hash, "foo", "wat", "baz") }
+    assert_equal "foo.wat is nil", exception.message
+  end
+
+  test "return default value" do |hash|
+    assert_equal "default", Fat.at(hash, "foo", "wat", "baz", default: "default")
+    assert_equal "default", Fat.at(hash, "foo", "bar", "wat", default: "default")
+  end
+
+  test "include the module" do |hash|
+    Hash.include(Fat)
+
+    assert hash.respond_to?(:at)
+    assert_equal :found, hash.at("foo", "bar", "baz")
+  end
+end
+
+scope do
+  setup do
+    {
       foo: {
         "bar" => {
           baz: :found
@@ -14,88 +50,24 @@ scope do
 
   test "honor key type" do |hash|
     exception = assert_raise(Fat::FatError) { Fat.at(hash, :foo, :bar, :found) }
-    assert_equal "No hash found at foo.bar", exception.message
+    assert_equal "foo.bar is nil", exception.message
 
     assert_equal :found, Fat.at(hash, :foo, "bar", :baz)
   end
 end
 
 scope do
-  test "single argument must be a namespace" do
-    exception = assert_raise(Fat::FatError) { Fat.at({"foo" => "bar"}, "foo") }
-    assert_equal "Single argument expected to be a namespace with dots (.) or colons (:)", exception.message
-  end
-end
-
-scope do
-  setup do
-    {
-      "foo" => {
-        "bar" => {
-          "baz" => :found
-        }
-      }
-    }
-  end
-
-  test "namespaced strings" do |hash|
-    assert_equal :found, Fat.at(hash, "foo.bar.baz")
-
-    exception = assert_raise(Fat::FatError) { Fat.at(hash, "foo.not.baz") }
-    assert_equal "No hash found at foo.not", exception.message
-  end
-end
-
-scope do
-  setup do
-    {
-      foo: {
-        bar: {
-          baz: :found
-        }
-      }
-    }
-  end
-
-  test "namespaced symbols" do |hash|
-    assert_equal :found, Fat.at(hash, "foo:bar:baz")
-
-    exception = assert_raise(Fat::FatError) { Fat.at(hash, "foo:not:baz") }
-    assert_equal "No hash found at foo.not", exception.message
-  end
-end
-
-scope do
-  setup do
-    Hash.include(Fat)
-
-    {
-      "foo" => {
-        "bar" => {
-          "baz" => :found
-        }
-      }
-    }
-  end
-
-  test "include the module" do |hash|
-    assert hash.respond_to?(:at)
-  end
-
-  test "honor Fat interface" do |hash|
-    assert_equal :found, hash.at("foo", "bar", "baz")
-    assert_equal :found, hash.at("foo.bar.baz")
-  end
-end
-
-scope do
   setup do
     Hash.include(Fat)
   end
 
-  test "corner case" do
+  test "corner case: empty hashes" do
     assert_raise(Fat::FatError) { {}.at(:foo, :bar) }
     assert_raise(Fat::FatError) { Fat.at({}, :foo, :bar) }
+  end
+
+  test "corner case: lookup a single key" do
+    assert_equal :found, {"foo" => :found}.at("foo")
   end
 end
 
