@@ -61,9 +61,13 @@ scope do
     Hash.include(Fat)
   end
 
-  test "corner case" do
+  test "corner case: empty hashes" do
     assert_raise(Fat::FatError) { {}.at(:foo, :bar) }
     assert_raise(Fat::FatError) { Fat.at({}, :foo, :bar) }
+  end
+
+  test "corner case: lookup a single key" do
+    assert_equal :found, {"foo" => :found}.at("foo")
   end
 end
 
