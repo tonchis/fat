@@ -26,7 +26,7 @@ scope do
 
   test "return default value" do |hash|
     assert_equal "default", Fat.at(hash, "foo", "wat", "baz", default: "default")
-    assert_equal "default", Fat.at(hash, "foo", "bar", "wat", default: "default")
+    assert_equal nil, Fat.at(hash, "foo", "bar", "wat", default: nil)
   end
 
   test "include the module" do |hash|
@@ -34,6 +34,11 @@ scope do
 
     assert hash.respond_to?(:at)
     assert_equal :found, hash.at("foo", "bar", "baz")
+
+    exception = assert_raise(Fat::FatError) { hash.at("foo", "wat", "baz") }
+    assert_equal "foo.wat is nil", exception.message
+
+    assert_equal nil, hash.at("foo", "bar", "wat", default: nil)
   end
 end
 

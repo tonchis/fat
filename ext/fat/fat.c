@@ -9,14 +9,13 @@ void Init_fat();
 static VALUE singleton_method_at(int argc, VALUE *argv, VALUE self);
 static VALUE method_at(int argc, VALUE *argv, VALUE hash);
 
-static VALUE fat(VALUE hash, VALUE fields, VALUE default_value);
+static VALUE fat(VALUE hash, VALUE fields, VALUE keywords);
 
 // Helpers
 static inline VALUE fields_upto_index(VALUE fields, long index);
 static inline long compute_error_message_length(VALUE fields, long index);
 static inline void copy_error_message(VALUE fields, long index, char* error_message_pointer);
 static inline VALUE sym_to_str(VALUE sym);
-static inline VALUE extract_default(VALUE keywords);
 
 void Init_fat(void) {
   Fat = rb_define_module("Fat");
@@ -33,7 +32,7 @@ static VALUE singleton_method_at(int argc, VALUE *argv, VALUE self) {
 
   rb_scan_args(argc, argv, "1*:", &hash, &fields, &keywords);
 
-  return fat(hash, fields, extract_default(keywords));
+  return fat(hash, fields, keywords);
 }
 
 static VALUE method_at(int argc, VALUE *argv, VALUE hash) {
@@ -42,18 +41,18 @@ static VALUE method_at(int argc, VALUE *argv, VALUE hash) {
 
   rb_scan_args(argc, argv, "*:", &fields, &keywords);
 
-  return fat(hash, fields, extract_default(keywords));
+  return fat(hash, fields, keywords);
 }
 
-static VALUE fat(VALUE hash, VALUE fields, VALUE default_value) {
+static VALUE fat(VALUE hash, VALUE fields, VALUE keywords) {
   VALUE value = hash;
 
   for (long i = 0; i < RARRAY_LEN(fields); i++) {
     value = rb_hash_aref(value, RARRAY_AREF(fields, i));
 
     if (NIL_P(value)) {
-      if (!NIL_P(default_value)) {
-        return default_value;
+      if (!NIL_P(keywords)) {
+        return rb_hash_aref(keywords, ID2SYM(rb_intern("default")));
       } else {
         rb_raise(rb_eFatError, "%s is nil", RSTRING_PTR(fields_upto_index(fields, i)));
       }
@@ -125,12 +124,3 @@ static inline VALUE sym_to_str(VALUE sym) {
   return rb_id2str(SYM2ID(sym));
 }
 
-static inline VALUE extract_default(VALUE keywords) {
-  VALUE result = Qnil;
-
-  if (!NIL_P(keywords)) {
-    result = rb_hash_aref(keywords, ID2SYM(rb_intern("default")));
-  }
-
-  return result;
-}
