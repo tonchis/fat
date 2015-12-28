@@ -26,6 +26,7 @@ scope do
 
   test "return default value" do |hash|
     assert_equal "default", Fat.at(hash, "foo", "wat", "baz", default: "default")
+    assert_equal "default", Fat.at(hash, "foo", "bar", "wat", default: "default")
   end
 
   test "include the module" do |hash|
