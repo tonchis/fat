@@ -4,13 +4,18 @@ require_relative "../lib/fat"
 class Hash
   include Fat
 
-  def ruby_at(*args)
-    fields = args.length == 1 ? args[0].split(".") : args
+  def ruby_at(*args, **keywords)
     value = self
 
-    fields[0..-2].each_with_index do |field, index|
+    args.each_with_index do |field, index|
       value = value[field]
-      raise Fat::FatError, "No hash found at #{fields[0..index].join(".")}" unless value.kind_of?(Hash)
+      if value.nil?
+        if !keywords.empty?
+          return keywords[:default]
+        else
+          raise Fat::FatError, "#{args[0..index].join(".")} is nil"
+        end
+      end
     end
 
     value
@@ -27,135 +32,96 @@ hash = {
   }
 }
 
-puts "### String chain as a single argument."
-Benchmark.ips do |bench|
-  bench.report("ruby") { hash.ruby_at("foo.bar.baz.key") }
-  bench.report("c")    { hash.at("foo.bar.baz.key") }
-  bench.compare!
-end
-
-### String chain as a single argument.
-# Calculating -------------------------------------
-#                 ruby     37856 i/100ms
-#                    c     47169 i/100ms
-# -------------------------------------------------
-#                 ruby   538803.8 (±7.3%) i/s -    2687776 in   5.026742s
-#                    c   722313.8 (±7.2%) i/s -    3584844 in   5.006989s
-#
-# Comparison:
-#                    c:   722313.8 i/s
-#                 ruby:   538803.8 i/s - 1.34x slower
-
-
-puts "### Each key as an argument."
+puts "### Small hash"
 Benchmark.ips do |bench|
   bench.report("ruby") { hash.ruby_at("foo", "bar", "baz") }
   bench.report("c")    { hash.at("foo", "bar", "baz") }
   bench.compare!
 end
 
-### Each key as an argument.
+# ### Small hash
 # Calculating -------------------------------------
-#                 ruby     59783 i/100ms
-#                    c     74832 i/100ms
+#                 ruby    46.836k i/100ms
+#                    c    70.378k i/100ms
 # -------------------------------------------------
-#                 ruby  1074906.7 (±3.1%) i/s -    5380470 in   5.010624s
-#                    c  1590070.0 (±4.9%) i/s -    7932192 in   5.004163s
+#                 ruby    721.809k (± 4.2%) i/s -      3.606M
+#                    c      1.401M (± 5.2%) i/s -      7.038M
 #
 # Comparison:
-#                    c:  1590070.0 i/s
-#                 ruby:  1074906.7 i/s - 1.48x slower
+#                    c:  1400986.2 i/s
+#                 ruby:   721809.1 i/s - 1.94x slower
 
-puts "### No value found."
+puts "### Small hash: no value found."
 Benchmark.ips do |bench|
-  bench.report("ruby") { hash.ruby_at("foo.one.key") rescue Fat::FatError }
-  bench.report("c")    { hash.at("foo.one.key") rescue Fat::FatError }
+  bench.report("ruby") { hash.ruby_at("foo", "one", "key") rescue Fat::FatError }
+  bench.report("c")    { hash.at("foo", "one", "key") rescue Fat::FatError }
   bench.compare!
 end
 
-### No value found.
+# ### Small hash: no value found.
 # Calculating -------------------------------------
-#                 ruby     17493 i/100ms
-#                    c     18993 i/100ms
+#                 ruby    20.762k i/100ms
+#                    c    27.350k i/100ms
 # -------------------------------------------------
-#                 ruby   208018.1 (±4.9%) i/s -    1049580 in   5.060661s
-#                    c   225204.0 (±5.1%) i/s -    1139580 in   5.074972s
+#                 ruby    249.174k (± 3.6%) i/s -      1.246M
+#                    c    338.960k (± 3.9%) i/s -      1.696M
 #
 # Comparison:
-#                    c:   225204.0 i/s
-#                 ruby:   208018.1 i/s - 1.08x slower
+#                    c:   338959.9 i/s
+#                 ruby:   249174.3 i/s - 1.36x slower
 
-deep_hash = {}
-1.upto(100) do |n|
-  key = (1...n).to_a.join(".")
-  current_hash = deep_hash.at(key)
-  current_hash[n.to_s] = {}
+deep_hash = { "1" => {} }
+2.upto(100) do |step|
+  key = (1...step).to_a.map(&:to_s)
+  current_hash = deep_hash.at(*key)
+  current_hash[step.to_s] = {}
 end
 
 path_to_100 = 1.upto(100).to_a.map(&:to_s)
 
-deep_hash.at(path_to_100.join("."))["foo"] = :bar
+deep_hash.at(*path_to_100)["foo"] = :bar
 
 path_to_foo = path_to_100 << "foo"
 
-puts "### Deep hash - String chain argument."
-Benchmark.ips do |bench|
-  bench.report("ruby") { deep_hash.ruby_at(path_to_foo.join(".")) }
-  bench.report("c")    { deep_hash.at(path_to_foo.join(".")) }
-  bench.compare!
-end
-
-### Deep hash - String chain argument.
-# Calculating -------------------------------------
-#                 ruby      2549 i/100ms
-#                    c      3633 i/100ms
-# -------------------------------------------------
-#                 ruby    27061.4 (±4.1%) i/s -     135097 in   5.002624s
-#                    c    37773.5 (±3.0%) i/s -     188916 in   5.006074s
-#
-# Comparison:
-#                    c:    37773.5 i/s
-#                 ruby:    27061.4 i/s - 1.40x slower
-
-puts "### Deep hash - Each key as an argument."
+puts "### Deep hash"
 Benchmark.ips do |bench|
   bench.report("ruby") { deep_hash.ruby_at(*path_to_foo) }
   bench.report("c")    { deep_hash.at(*path_to_foo) }
   bench.compare!
 end
 
-### Deep hash - Each key as an argument.
+# ### Deep hash
 # Calculating -------------------------------------
-#                 ruby      4812 i/100ms
-#                    c     14712 i/100ms
+#                 ruby     4.856k i/100ms
+#                    c    14.405k i/100ms
 # -------------------------------------------------
-#                 ruby    49779.4 (±5.1%) i/s -     250224 in   5.042241s
-#                    c   168563.4 (±3.4%) i/s -     853296 in   5.068311s
+#                 ruby     51.262k (± 3.7%) i/s -    257.368k
+#                    c    162.600k (± 4.0%) i/s -    821.085k
 #
 # Comparison:
-#                    c:   168563.4 i/s
-#                 ruby:    49779.4 i/s - 3.39x slower
+#                    c:   162600.4 i/s
+#                 ruby:    51261.8 i/s - 3.17x slower
 
 path_to_not = 1.upto(99).to_a.map(&:to_s)
 path_to_not << "not"
 path_to_not << "100"
 
-puts "### Deep hash - No value found."
+puts "### Deep hash: no value found."
 Benchmark.ips do |bench|
   bench.report("ruby") { deep_hash.ruby_at(*path_to_not) rescue Fat::FatError }
   bench.report("c")    { deep_hash.at(*path_to_not) rescue Fat::FatError }
   bench.compare!
 end
 
-### Deep hash - No value found.
+# ### Deep hash: no value found.
 # Calculating -------------------------------------
-#                 ruby      2787 i/100ms
-#                    c      8277 i/100ms
+#                 ruby     2.883k i/100ms
+#                    c     8.066k i/100ms
 # -------------------------------------------------
-#                 ruby    30667.8 (±1.3%) i/s -     156072 in   5.090009s
-#                    c    86884.1 (±5.1%) i/s -     438681 in   5.064367s
+#                 ruby     29.836k (± 4.1%) i/s -    149.916k
+#                    c     86.900k (± 4.5%) i/s -    435.564k
 #
 # Comparison:
-#                    c:    86884.1 i/s
-#                 ruby:    30667.8 i/s - 2.83x slower
+#                    c:    86899.9 i/s
+#                 ruby:    29835.9 i/s - 2.91x slower
 

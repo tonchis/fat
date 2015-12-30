@@ -2,4 +2,7 @@ build:
 	rake compile
 	cutest test/**/*_test.rb
 
-.PHONY: build
+benchmark:
+	ruby benchmarks/fat.rb
+
+.PHONY: build benchmark
